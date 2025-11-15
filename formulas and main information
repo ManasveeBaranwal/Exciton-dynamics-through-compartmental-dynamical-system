@@ -1,0 +1,315 @@
+# Exciton Dynamics Using Compartment Models  
+_A simple, clear, SEIR-style approach to Markovian, non-Markovian, and squeezed-bath environments_
+
+This repository contains three exciton-dynamics models described using **compartment systems** (similar to SEIR epidemic models).  
+All models track how an exciton moves, loses coherence, interacts with the environment, and finally decays to the ground state.
+
+We build everything step-by-step:
+
+1. **Model 1 – Markovian exciton dynamics**  
+2. **Model 2 – Non-Markovian model with a memory compartment**  
+3. **Model 3 – Non-Markovian model with squeezed p- and x-memory channels**
+
+Each model includes:
+
+- compartments (states)
+- equations
+- diagrams
+- parameter definitions
+- **threshold conditions** (which states survive as time → ∞)
+
+The goal is to make different exciton environments easy to understand **without heavy quantum mechanics**.
+
+---
+
+# 1. Model 1 – Markovian Exciton Dynamics
+
+## Compartments
+
+- **X1** – exciton on site 1  
+- **X2** – exciton on site 2  
+- **D** – decohered excitation  
+- **G** – ground state (absorbing, final sink)
+
+Total population is conserved:
+P1 + P2 + D + G = 1
+
+
+## Parameters
+
+- `\Delta_r` – coherent hopping rate between X1 and X2  
+- `\k_deph` – dephasing rate X1/X2 → D  
+- `\k_loss1`, `k_loss2` – recombination from X1/X2 → G  
+- `\k_relax` – relaxation D → G  
+
+## Diagram
+            Δᵣ
+ +---------------------------+
+ |                           |
+ v                           |
+
+
+## Equations
+dP1/dt = -ΔrP1 + ΔrP2 - (k_deph + k_loss1)P1
+dP2/dt = ΔrP1 - ΔrP2 - (k_deph + k_loss2)P2
+dD/dt = k_deph(P1+P2) - k_relaxD
+dG/dt = k_loss1P1 + k_loss2P2 + k_relax*D
+
+k_loss1 > 0
+k_loss2 > 0
+k_relax > 0→ **G → 1** at long times.
+
+### **Decohered state D survives if:**
+k_relax = 0
+
+→ D becomes a permanent storage.
+
+### **Excited states survive if ALL losses are zero:**
+
+
+k_loss1 = k_loss2 = k_relax = 0
+
+Then exciton keeps oscillating between X1 and X2.
+
+### **Selective survival:**
+- If `k_loss1 = 0` and others >0 → **X1 survives**
+- If `k_loss2 = 0` and others >0 → **X2 survives**
+
+These thresholds will appear again in the more advanced models.
+
+---
+
+# 2. Model 2 – Non-Markovian Dynamics (Single Memory Compartment)
+
+Here we add a **memory compartment M**, which temporarily stores population and then returns a fraction of it.
+
+## Compartments
+
+- **X1**, **X2** – exciton on sites  
+- **M** – memory compartment (environment with memory)  
+- **D** – decohered excitation  
+- **G** – ground state  
+
+## Parameters
+
+- `Delta_r` – coherent hopping  
+- `k_mem` – rate X1/X2 → M  
+- `gamma_mem` – decay of memory  
+- `f_back` – fraction of memory that returns to X1/X2 (non-Markovianity)  
+- `k_deph`, `k_loss1`, `k_loss2`, `k_relax` – same meanings as in Model 1  
+
+## Diagram
+
+               Δᵣ
+   +---------------------------+
+   |                           |
+   v                           |
+ [ X1 ]  <-------------------> [ X2 ]
+   |  \                      /  |
+   |   \ k_mem             /   |
+   |    \                 /    |
+   v     v               v     v
+  (to G)  \             /  (to G)
+           \           /
+            \         /
+              [   M   ]
+                  |
+              γ_mem M
+            /           \
+backflow: f_back→X1,X2 leak: (1−f_back)→D
+
+  D --k_relax--> G
+  X1 --k_loss1--> G
+  X2 --k_loss2--> G## Equations
+dP1/dt = -ΔrP1 + ΔrP2
+- (k_deph + k_loss1 + k_mem)P1
++ 0.5f_backgamma_memM
+
+dP2/dt = ΔrP1 - ΔrP2
+- (k_deph + k_loss2 + k_mem)P2
++ 0.5f_backgamma_memM
+
+dM/dt = k_mem*(P1+P2) - gamma_mem*M
+
+dD/dt = k_deph*(P1+P2) + (1−f_back)gamma_memM - k_relax*D
+
+dG/dt = k_loss1P1 + k_loss2P2 + k_relax*D## IMPORTANT THRESHOLD CONDITIONS (Model 2)
+
+### **Non-Markovianity threshold**
+Memory backflow is present only if:
+f_back > 0
+
+markdown
+Copy code
+
+### **Revival threshold**
+To see noticeable revivals:
+f_back > 0.3
+gamma_mem small (≈ 0.1–0.5)### **Long-term survivors**
+Same thresholds as Model 1 + memory effects:
+
+### Ground G survives if:
+k_loss1 > 0
+k_loss2 > 0
+k_relax > 0
+gamma_mem > 0
+
+shell
+Copy code
+### Memory M survives if:
+gamma_mem = 0### D survives if:
+k_relax = 0### X1 or X2 survive if:
+their decay rate = 0
+
+markdown
+Copy code
+
+---
+
+# 3. Model 3 – Non-Markovian + Squeezed Bath (p/x Channels)
+
+This model splits the memory into **two channels**:
+
+- **Mp** – p-quadrature memory (reduced noise)  
+- **Mx** – x-quadrature memory (increased noise)  
+
+Squeezing changes how much population goes into each memory channel.
+
+## Compartments
+
+- **X1**, **X2** – sites  
+- **Mp** – p-memory  
+- **Mx** – x-memory  
+- **D** – decohered  
+- **G** – ground  
+
+## Squeezing parameters
+
+u = cosh(r)
+w = sinh(r)
+
+Vp = 0.25 * (u^2 + w^2 - 2uwcos(theta)) # p noise
+Vx = 0.25 * (u^2 + w^2 + 2uwcos(theta)) # x noise
+
+
+- `r` – squeezing strength  
+- `theta` – squeezing angle  
+
+## Diagram
+                     Δᵣ
+      +-------------------------------------+
+      |                                     |
+      v                                     |
+  [ X1 ] <-------------------------------> [ X2 ]
+    |  \                                     /  |
+    |   \ k_mem*Vp                          /   |
+    |    \                                  /    |
+    v     v                                v     v
+   [ Mp ]                                  [ Mx ]
+    |            γ_mem                      |
+    |         /       \                     |
+backflow f_p→X1,X2 leak (1−f_p)→D backflow f_x→X1,X2
+leak (1−f_x)→D
+
+                  D  --k_relax-->  G
+      X1 --k_loss1--> G,  X2 --k_loss2--> G
+
+
+## Equations
+
+
+dP1/dt = -ΔrP1 + ΔrP2
+- (k_deph + k_loss1 + k_mem)P1
++ 0.5(f_pγ_memMp + f_xγ_memMx)
+
+dP2/dt = ΔrP1 - ΔrP2
+- (k_deph + k_loss2 + k_mem)P2
++ 0.5(f_pγ_memMp + f_xγ_memMx)
+
+dMp/dt = k_memVp(P1+P2) - γ_memMp
+dMx/dt = k_memVx*(P1+P2) - γ_mem*Mx
+
+dD/dt = k_deph*(P1+P2)
++ (1−f_p)γ_memMp
++ (1−f_x)γ_memMx
+- k_relax*D
+
+dG/dt = k_loss1P1 + k_loss2P2 + k_relax*D
+
+
+---
+
+## IMPORTANT THRESHOLD CONDITIONS (Model 3)
+
+### **Squeezing-based thresholds**
+
+**p-memory dominates when:**
+
+
+theta ≈ 0
+Vp small
+Vx large
+f_p large
+
+→ long-lived coherence
+
+**x-memory dominates when:**
+
+
+theta ≈ π
+Vx small
+Vp large
+f_x small
+
+→ fast decoherence
+
+### **Backflow threshold**
+To get real non-Markovian revivals:
+
+
+f_p > 0.2
+or
+f_x > 0.2
+and
+gamma_mem low
+
+
+### **Ground state G becomes the only survivor when:**
+
+
+k_loss1 > 0
+k_loss2 > 0
+k_relax > 0
+gamma_mem > 0
+
+
+### **Memory channels survive if:**
+
+
+gamma_mem = 0
+
+
+### **Decohered state D survives if:**
+
+
+k_relax = 0
+
+
+### **Excited states survive if:**
+
+
+k_loss1 = 0 → X1 survives
+k_loss2 = 0 → X2 survives
+
+
+---
+
+# Final Notes
+
+- These models are intentionally simplified so that intuition is clear.  
+- They preserve population exactly: the system never "loses" probability.  
+- Adding sliders (via `ipywidgets`) makes it easy to explore how environmental parameters affect coherence and survival.
+
+This README explains **all three exciton models** in a way that is easy to read and reproduce.  
+You can now use the diagrams, equations, and thresholds in your GitHub project directly.
+
